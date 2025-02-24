@@ -1,10 +1,19 @@
+import psycopg2
 import re
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
+
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
+DB_NAME = "userdb"
+DB_USER = "myuser"
+DB_PASSWORD = "mypassword"
+DB_HOST = "localhost"
+
+def connect_db():
+    return psycopg2.connect(database=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
 
 def is_valid_email(email):
     email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
@@ -18,18 +27,43 @@ def create_user():
         email = data.get("email")
         password = data.get("password")
         phone = data.get("phone")
+
         if not username or not email or not password or not phone:
-            return jsonify({"error": "Username, email, password, and phone are required!"}), 400
+            return jsonify({"error": "All fields are required!"}), 400
+
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format!"}), 400
-        new_user = {
-            "username": username,
-            "email": email,
-            "phone": phone
-        }
-        print("Hello", new_user["username"]) # Log user creation to terminal
-        return jsonify({"message": f"User {new_user['username']} created successfully!"}), 201
+
+
+
+        conn = connect_db()
+        cur = conn.cursor()
+
+        try:
+            cur.execute(
+                "INSERT INTO users (username, email, password, phone) VALUES (%s, %s, %s, %s) RETURNING id",
+                (username, email, password, phone),
+            )
+            user_id = cur.fetchone()[0]
+            conn.commit()
+
+            # ✅ Print the username after successful creation
+            print(f"Hello {username}")
+
+            return jsonify({"message": f"User {username} created successfully!", "user_id": user_id}), 201
+        except psycopg2.Error as e:
+            conn.rollback()
+            if "duplicate key value" in str(e):
+                return jsonify({"error": "Email already exists!"}), 400
+            return jsonify({"error": "Database error", "details": str(e)}), 500
+        finally:
+            cur.close()
+            conn.close()
+
     except Exception as e:
-        return jsonify({"error": "An error occurred", "details": str(e)}), 500
+        print("🔥 ERROR:", str(e))  # Add this
+        return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True)
