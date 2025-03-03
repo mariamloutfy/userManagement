@@ -96,6 +96,26 @@ def get_user(user_id):
         cur.close()
         conn.close()
 
+@app.route('/get-users', methods=['GET'])
+def get_users():
+    try:
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, username, email, phone FROM users")
+        users = cur.fetchall()
+        if not users:
+            return jsonify({"message": "No users found"}), 404
+        user_list = [
+            {"id": user[0], "username": user[1], "email": user[2], "phone": user[3]}
+            for user in users
+        ]
+        return jsonify(user_list), 200
+    except psycopg2.Error as e:
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 @app.route('/update-user/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
     conn = None
