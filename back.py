@@ -3,27 +3,6 @@ import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-
-app = Flask(__name__)
-CORS(app)
-
-DB_NAME = "userdb"
-DB_USER = "myuser"
-DB_PASSWORD = "mypassword"
-DB_HOST = "localhost"
-
-def connect_db():
-    return psycopg2.connect(database=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
-
-def is_valid_email(email):
-    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-    return re.match(email_regex, email) is not None
-
-import psycopg2
-import re
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-
 app = Flask(__name__)
 CORS(app)
 
@@ -185,8 +164,11 @@ def delete_user(user_id):
         conn.rollback()
         return jsonify({"error": "Database error", "details": str(e)}), 500
     finally:
-        cur.close()
-        conn.close()
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
