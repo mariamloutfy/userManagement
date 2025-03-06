@@ -2,6 +2,7 @@ import psycopg2
 import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app)
@@ -30,12 +31,13 @@ def create_user():
             return jsonify({"error": "All fields are required!"}), 400
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format!"}), 400
+        hashed_password = generate_password_hash(password)
         conn = connect_db()
         cur = conn.cursor()
         try:
             cur.execute(
                 "INSERT INTO users (username, email, password, phone) VALUES (%s, %s, %s, %s) RETURNING id",
-                (username, email, password, phone),
+                (username, email, hashed_password, phone),
             )
             user_id = cur.fetchone()[0]
             conn.commit()
@@ -168,7 +170,25 @@ def delete_user(user_id):
             cur.close()
         if conn:
             conn.close()
-
-
+@app.route('/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
+        if not email or not password:
+            return jsonify({"error": "Email and password are required!"}), 400
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, username, password FROM users WHERE email = %s", (email,))
+        user = cur.fetchone()
+        if not user or not check_password_hash(user[2], password):
+            return jsonify({"error": "Invalid email or password! Learn to type properly!"}), 401
+        return jsonify({"message": f"Welcome, {user[1]}!"}), 200
+    except psycopg2.Error as e:
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
 if __name__ == "__main__":
     app.run(debug=True)
