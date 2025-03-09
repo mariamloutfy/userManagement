@@ -1,12 +1,7 @@
-from flask import Flask
-from flask_cors import CORS
-from routes import routes_bp
+from flask import Blueprint
+from routes.users import users_bp  # Import your users blueprint
 
-app = Flask(__name__)
-CORS(app)
+routes_bp = Blueprint("routes", __name__)
 
-# Register routes
-app.register_blueprint(routes_bp)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+# Register the users blueprint
+routes_bp.register_blueprint(users_bp, url_prefix="/users")
