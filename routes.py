@@ -1,16 +1,11 @@
-import re
-import psycopg2
 from flask import Blueprint, request, jsonify
-from werkzeug.security import generate_password_hash, check_password_hash
-from db.connection import connect_db
+import psycopg2
+from db import connect_db
+from utils import is_valid_email
 
-users_bp = Blueprint("users", __name__)
+routes = Blueprint("routes", __name__)
 
-def is_valid_email(email):
-    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
-    return re.match(email_regex, email) is not None
-
-@users_bp.route('/create', methods=['POST'])
+@routes.route('/create-user', methods=['POST'])
 def create_user():
     try:
         data = request.json 
@@ -22,13 +17,12 @@ def create_user():
             return jsonify({"error": "All fields are required!"}), 400
         if not is_valid_email(email):
             return jsonify({"error": "Invalid email format!"}), 400
-        hashed_password = generate_password_hash(password)
         conn = connect_db()
         cur = conn.cursor()
         try:
             cur.execute(
                 "INSERT INTO users (username, email, password, phone) VALUES (%s, %s, %s, %s) RETURNING id",
-                (username, email, hashed_password, phone),
+                (username, email, password, phone),
             )
             user_id = cur.fetchone()[0]
             conn.commit()
@@ -46,7 +40,7 @@ def create_user():
         print("🔥 ERROR:", str(e))
         return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
 
-@users_bp.route('/get/<int:user_id>', methods=['GET'])
+@routes.route('/get-user/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     try:
         conn = connect_db()
@@ -68,7 +62,7 @@ def get_user(user_id):
         cur.close()
         conn.close()
 
-@users_bp.route('/get-all', methods=['GET'])
+@routes.route('/get-users', methods=['GET'])
 def get_users():
     try:
         conn = connect_db()
@@ -88,10 +82,10 @@ def get_users():
         cur.close()
         conn.close()
 
-@users_bp.route('/update/<int:user_id>', methods=['PUT'])
+@routes.route('/update-user/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
     conn = None
-    cur = None  # Declare cur here to avoid UnboundLocalError
+    cur = None
     try:
         data = request.json
         username = data.get("username")
@@ -104,7 +98,6 @@ def update_user(user_id):
         conn = connect_db()
         cur = conn.cursor()
 
-        # Dynamically build the SET clause based on provided values
         update_fields = []
         update_values = []
 
@@ -118,8 +111,7 @@ def update_user(user_id):
             update_fields.append("email = %s")
             update_values.append(email)
 
-        update_values.append(user_id)  # Add user_id to values for WHERE condition
-
+        update_values.append(user_id)
         query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = %s"
 
         cur.execute(query, tuple(update_values))
@@ -141,9 +133,7 @@ def update_user(user_id):
         if conn:
             conn.close()
 
-
-
-@users_bp.route('/delete/<int:user_id>', methods=['DELETE'])
+@routes.route('/delete-user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     try:
         conn = connect_db()
@@ -161,24 +151,3 @@ def delete_user(user_id):
             cur.close()
         if conn:
             conn.close()
-
-@users_bp.route('/login', methods=['POST'])
-def login():
-    try:
-        data = request.json
-        email = data.get("email")
-        password = data.get("password")
-        if not email or not password:
-            return jsonify({"error": "Email and password are required!"}), 400
-        conn = connect_db()
-        cur = conn.cursor()
-        cur.execute("SELECT id, username, password FROM users WHERE email = %s", (email,))
-        user = cur.fetchone()
-        if not user or not check_password_hash(user[2], password):
-            return jsonify({"error": "Invalid email or password! Learn to type properly!"}), 401
-        return jsonify({"message": f"Welcome, {user[1]}!"}), 200
-    except psycopg2.Error as e:
-        return jsonify({"error": "Database error", "details": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()

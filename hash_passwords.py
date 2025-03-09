@@ -16,7 +16,8 @@ def hash_existing_passwords():
     cur.execute("SELECT id, password FROM users")
     users = cur.fetchall()
     for user_id, plain_password in users:
-        hashed_password = generate_password_hash(plain_password, method="pbkdf2:sha256")
+        hashed_password = generate_password_hash(plain_password, method='pbkdf2:sha256')
+
         cur.execute("UPDATE users SET password = %s WHERE id = %s", (hashed_password, user_id))
     
     conn.commit()
