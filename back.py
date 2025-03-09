@@ -1,4 +1,4 @@
-import psycopg2
+
 import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -7,13 +7,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
-DB_NAME = "userdb"
-DB_USER = "myuser"
-DB_PASSWORD = "mypassword"
-DB_HOST = "localhost"
-
-def connect_db():
-    return psycopg2.connect(database=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST)
 
 def is_valid_email(email):
     email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
