@@ -5,7 +5,7 @@ from utils import is_valid_email
 
 routes = Blueprint("routes", __name__)
 
-@routes.route('/create-user', methods=['POST'])
+@routes.route('/users', methods=['POST'])
 def create_user():
     try:
         data = request.json 
@@ -40,7 +40,8 @@ def create_user():
         print("🔥 ERROR:", str(e))
         return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
 
-@routes.route('/get-user/<int:user_id>', methods=['GET'])
+
+@routes.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     try:
         conn = connect_db()
@@ -62,7 +63,7 @@ def get_user(user_id):
         cur.close()
         conn.close()
 
-@routes.route('/get-users', methods=['GET'])
+@routes.route('/users', methods=['GET']) 
 def get_users():
     try:
         conn = connect_db()
@@ -82,7 +83,7 @@ def get_users():
         cur.close()
         conn.close()
 
-@routes.route('/update-user/<int:user_id>', methods=['PUT'])
+@routes.route('/users/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
     conn = None
     cur = None
@@ -133,7 +134,7 @@ def update_user(user_id):
         if conn:
             conn.close()
 
-@routes.route('/delete-user/<int:user_id>', methods=['DELETE'])
+@routes.route('/users/<int:user_id>', methods=['DELETE']) 
 def delete_user(user_id):
     try:
         conn = connect_db()
