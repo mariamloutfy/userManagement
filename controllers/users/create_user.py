@@ -12,13 +12,14 @@ def create_user():
         email = data.get("email")
         password = data.get("password")
         phone = data.get("phone")
-        if not username or not email or not password:
+        department_id = data.get("department_id")
+        if not username or not email or not password or not department_id:
             return jsonify({"error": "Missing required fields"}), 400
         hashed_password = hash_password(password)  # ✅ Secure password storage
         conn = connect_db()
         cur = conn.cursor()
-        cur.execute("INSERT INTO users (username, email, password, phone) VALUES (%s, %s, %s, %s) RETURNING id",
-                    (username, email, hashed_password, phone))
+        cur.execute("INSERT INTO users (username, email, password, phone,department_id) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                    (username, email, hashed_password, phone, department_id))
         user_id = cur.fetchone()[0]
         conn.commit()
         cur.close()

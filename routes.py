@@ -4,6 +4,7 @@ from controllers.users.get_user import get_user
 from controllers.users.list_users import get_users
 from controllers.users.update_user import update_user
 from controllers.users.delete_user import delete_user
+from controllers.users.assign_department import assign_user_to_department
 from controllers.auth.login import login 
 
 from controllers.departments.create_department import create_department
@@ -21,7 +22,7 @@ routes.route('/users/<int:user_id>', methods=['GET'])(get_user)
 routes.route('/users', methods=['GET'])(get_users)
 routes.route('/users/<int:user_id>', methods=['PUT'])(update_user)
 routes.route('/users/<int:user_id>', methods=['DELETE'])(delete_user)
-
+routes.route('/users/<int:user_id>/assign_department', methods=['PUT'])(assign_user_to_department)
 # Department routes
 routes.route('/departments', methods=['POST'])(create_department) 
 routes.route('/departments/<int:dep_id>', methods=['DELETE'])(delete_department)

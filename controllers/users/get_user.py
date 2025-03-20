@@ -6,7 +6,7 @@ def get_user(user_id):
     try:
         conn = connect_db()
         cur = conn.cursor()
-        cur.execute("SELECT id, username, email, phone FROM users WHERE id = %s", (user_id,))
+        cur.execute("SELECT id, username, email, phone,department_id  FROM users WHERE id = %s", (user_id,))
         user = cur.fetchone()
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -14,7 +14,8 @@ def get_user(user_id):
             "id": user[0],
             "username": user[1],
             "email": user[2],
-            "phone": user[3]
+            "phone": user[3],
+            "department_id": user[4]
         }
         return jsonify(user_data), 200
     except psycopg2.Error as e:
