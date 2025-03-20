@@ -6,7 +6,7 @@ def get_departments():
     try:
         conn = connect_db()
         cur = conn.cursor()
-        cur.execute("SELECT id, depname, isActive FROM departments")
+        cur.execute("SELECT id, departmentname, isactive FROM departments")
         departments = cur.fetchall()
         if not departments:
             return jsonify({"message": "No departments found"}), 404
