@@ -4,40 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create a New User</title>
+    <style>
+    select {
+        background-color: white !important;
+        color: black !important;
+        font-size: 16px;
+        border: 1px solid black;
+    }
+    select option {
+        background-color: white !important;
+        color: black !important;
+    }
+</style>
+
+    </style>
     <script>
         function validateEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
-}
-
+        }
+        async function fetchDepartments() {
+            try {
+                const response = await fetch("http://127.0.0.1:5000/departments");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch departments");
+                }
+                const departments = await response.json();
+                console.log("Fetched Departments:", departments); // Debugging
+                const select = document.getElementById("department");
+                select.innerHTML = '<option value="">Select a department</option>'; // Reset before adding
+                departments.forEach(dept => {
+                    if (dept.depname) { // Ensure depname exists
+                        let option = document.createElement("option");
+                        option.value = dept.id;
+                        option.textContent = dept.depname; // Use "depname" instead of "name"
+                        option.style.backgroundColor = "white"; 
+                        option.style.color = "black"; 
+                        select.appendChild(option);
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching departments:", error);
+            }
+        }
+        window.onload = function() {
+        let select = document.getElementById("department");
+        select.style.backgroundColor = "white";
+        select.style.color = "black";
+        document.querySelectorAll("#department option").forEach(option => {
+            option.style.backgroundColor = "white";
+            option.style.color = "black";
+        });
+        fetchDepartments(); // Fetch departments after styling
+    };
         async function createUser(event) {
-            event.preventDefault(); // Prevents the default form submission
-            // Get user input values
+            event.preventDefault();
             const username = document.getElementById("username").value;
             const email = document.getElementById("email").value;
             const password = document.getElementById("pwd").value;
             const phone = document.getElementById("phone").value;
-            // Create request payload
-            const data = {
-                username: username,
-                email: email,
-                password: password,
-                phone: phone
-            };
+            const department_id = document.getElementById("department").value; // Get selected department ID
+
             if (!validateEmail(email)) {
                 document.getElementById("message").innerText = "❌ Invalid email format!";
                 document.getElementById("message").style.color = "red";
                 return;
             }
+
+            const data = { username, email, password, phone, department_id };
+
             try {
                 const response = await fetch("http://127.0.0.1:5000/users", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data),
-                mode: "cors"  // Ensure CORS mode is enabled
-            });
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                    mode: "cors"
+                });
                 const result = await response.json();
                 if (response.ok) {
                     document.getElementById("message").innerText = "✅ User created successfully!";
@@ -52,22 +94,31 @@
                 document.getElementById("message").style.color = "red";
             }
         }
+
+        window.onload = fetchDepartments; // Load departments when the page loads
     </script>
 </head>
 <body>
     <h2>New User</h2>
     <form onsubmit="createUser(event)">
         <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username"><br>
+        <input type="text" id="username" name="username" required><br>
+
         <label for="email">Email:</label><br>
-        <input type="text" id="email" name="email"><br>
+        <input type="text" id="email" name="email" required><br>
+
         <label for="pwd">Password:</label><br>
-        <input type="password" id="pwd" name="pwd"><br>
-        <label for="phone">Enter your phone number:</label><br>
+        <input type="password" id="pwd" name="pwd" required><br>
+
+        <label for="phone">Phone Number:</label><br>
         <input type="tel" id="phone" name="phone"><br>
+
+        <label for="department">Department:</label><br>
+        <select id="department" name="department">
+            <option value="">Select a department</option>
+        </select><br>        
         <button type="submit">Create User</button>
     </form>
     <p id="message"></p>
-
 </body>
 </html>
