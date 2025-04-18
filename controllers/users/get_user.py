@@ -8,7 +8,7 @@ def get_user(user_id):
         conn = connect_db()
         cur = conn.cursor()
         cur.execute("""
-            SELECT u.id, u.username, u.email, u.phone, d.departmentname 
+            SELECT u.id, u.username, u.email, u.phone,u.gender, d.departmentname 
             FROM users u 
             LEFT JOIN departments d ON u.department_id = d.id
             WHERE u.id = %s
@@ -22,7 +22,8 @@ def get_user(user_id):
             "username": user[1],
             "email": user[2],
             "phone": user[3],
-            "department": user[4]  # Returns department name instead of ID
+            "gender":user[4],
+            "department": user[5]  # Returns department name instead of ID
         }
 
         return jsonify(user_data), 200

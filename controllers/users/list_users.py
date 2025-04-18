@@ -7,7 +7,7 @@ def get_users():
         conn = connect_db()
         cur = conn.cursor()
         cur.execute("""
-            SELECT u.id, u.username, u.email, u.phone, d.departmentname 
+            SELECT u.id, u.username, u.email, u.phone,u.gender, d.departmentname 
             FROM users u
             LEFT JOIN departments d ON u.department_id = d.id
         """)
@@ -22,7 +22,8 @@ def get_users():
                 "username": user[1], 
                 "email": user[2], 
                 "phone": user[3], 
-                "department": user[4] if user[4] else "No Department"
+                "gender": user[4] ,
+                "department":user[5] if user[5] else "No Department"
             }
             for user in users
         ]
