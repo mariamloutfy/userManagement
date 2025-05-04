@@ -1,12 +1,6 @@
 from flask import request, jsonify
 import psycopg2
 from config.database import connect_db
-
-
-from flask import request, jsonify
-import psycopg2
-from config.database import connect_db
-
 def create_department():
     try:
         data = request.json

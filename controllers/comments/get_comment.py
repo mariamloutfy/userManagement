@@ -2,18 +2,17 @@
 from flask import request, jsonify
 from config.database import connect_db
 from datetime import datetime
+from core.database.fetch_one import fetch_one
 
 def get_comment(comment_id):
     try:
-        conn = connect_db()
-        cur = conn.cursor()
-        cur.execute("""
+        query = """
             SELECT c.id, c.comment, c.created_at, u.username, c.post_id
             FROM comments c
             JOIN users u ON c.created_by = u.id
             WHERE c.id = %s
-        """, (comment_id,))
-        row = cur.fetchone()
+        """
+        row = fetch_one(query, (comment_id,))
         if not row:
             return jsonify({"error": "Comment not found"}), 404
 

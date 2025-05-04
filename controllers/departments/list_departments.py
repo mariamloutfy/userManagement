@@ -1,35 +1,30 @@
 from flask import jsonify
 import psycopg2
-from config.database import connect_db
+from core.database.fetch_all import fetch_all
 
 def get_departments():
     try:
-        conn = connect_db()
-        cur = conn.cursor()
-        cur.execute("""
+        query = """
             SELECT d.id, d.departmentname, d.isactive, COUNT(u.id) 
             FROM departments d 
             LEFT JOIN users u ON d.id = u.department_id
             GROUP BY d.id, d.departmentname, d.isactive
-        """)
-        
-        departments = cur.fetchall()
+        """
+        departments = fetch_all(query)
+
         if not departments:
             return jsonify({"message": "No departments found"}), 404
 
         department_list = [
             {
-                "id": department[0], 
-                "depname": department[1], 
-                "isActive": department[2], 
-                "userCount": department[3]  # Adding user count
+                "id": dep[0],
+                "depname": dep[1],
+                "isActive": dep[2],
+                "userCount": dep[3]
             }
-            for department in departments
+            for dep in departments
         ]
 
         return jsonify(department_list), 200
-    except psycopg2.Error as e:
-        return jsonify({"error": "Database error", "details": str(e)}), 500
-    finally:
-        cur.close()
-        conn.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

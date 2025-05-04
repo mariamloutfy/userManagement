@@ -1,20 +1,18 @@
 from flask import request, jsonify
 import psycopg2
-from config.database import connect_db
+from core.database.fetch_one import fetch_one
+from core.database.fetch_all import fetch_all
 
 def get_post(post_id):
     try:
-        conn = connect_db()
-        cur = conn.cursor()
-
-        # Get post and author
-        cur.execute("""
+        # Fetch post and author
+        post_query = """
             SELECT p.id, p.title, p.description, p.created_at, u.username
             FROM posts p
             JOIN users u ON p.created_by = u.id
             WHERE p.id = %s
-        """, (post_id,))
-        post = cur.fetchone()
+        """
+        post = fetch_one(post_query, (post_id,))
         if not post:
             return jsonify({"error": "Post not found"}), 404
 
@@ -27,15 +25,15 @@ def get_post(post_id):
             "comments": []
         }
 
-        # Get comments
-        cur.execute("""
+        # Fetch comments
+        comment_query = """
             SELECT c.comment, c.created_at, u.username
             FROM comments c
             JOIN users u ON c.created_by = u.id
             WHERE c.post_id = %s
             ORDER BY c.created_at ASC
-        """, (post_id,))
-        comments = cur.fetchall()
+        """
+        comments = fetch_all(comment_query, (post_id,))
         post_data["comments"] = [
             {
                 "comment": c[0],

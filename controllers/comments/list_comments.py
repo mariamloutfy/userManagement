@@ -1,17 +1,18 @@
 from flask import request, jsonify
 from config.database import connect_db
 from datetime import datetime
+from core.database.fetch_all import fetch_all
+
 def get_comments():
     try:
-        conn = connect_db()
-        cur = conn.cursor()
-        cur.execute("""
+        query = """
             SELECT c.id, c.comment, c.created_at, u.username, c.post_id
             FROM comments c
             JOIN users u ON c.created_by = u.id
             ORDER BY c.created_at DESC
-        """)
-        comments = cur.fetchall()
+        """
+        comments = fetch_all(query)
+
         comment_list = [
             {
                 "id": row[0],
